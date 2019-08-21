@@ -9,20 +9,11 @@ import getGenerator from './get-generator.js';
  *   an empty string if the spec does not contain any IDL.
  */
 export default function () {
-    const generator = getGenerator();
-    if (generator === 'bikeshed') {
-        return extractBikeshedIdl();
-    }
-    else if (document.title.startsWith('Web IDL')) {
-        // IDL content in the Web IDL spec are... examples,
-        // not real definitions
-        return '';
-    }
-    else {
-        // Most non-ReSpec specs still follow the ReSpec conventions
-        // for IDL definitions
-        return extractRespecIdl();
-    }
+    return {
+        url,
+        doc: document,
+        ...extractRespecIdl()
+    };
 }
 
 
@@ -103,7 +94,7 @@ function extractRespecIdl() {
     const idlEl = document.querySelector('#idl-index pre') ||
         document.querySelector('.chapter-idl pre'); // SVG 2 draft
 
-    let idl = [
+    let blocks = [
         'pre.idl:not(.exclude):not(.extract):not(#actual-idl-index)',
         'pre:not(.exclude):not(.extract) > code.idl-code:not(.exclude):not(.extract)',
         'pre:not(.exclude):not(.extract) > code.idl:not(.exclude):not(.extract)',
@@ -115,7 +106,7 @@ function extractRespecIdl() {
         .filter(el => el !== idlEl)
         .filter((el, idx, self) => self.indexOf(el) === idx)
         .filter(el => !el.closest(nonNormativeSelector))
-        .map(el => el.cloneNode(true))
+        // .map(el => el.cloneNode(true)) we need it to be inside the tree
         .map(el => {
             const header = el.querySelector('.idlHeader');
             if (header) {
@@ -126,9 +117,9 @@ function extractRespecIdl() {
                 tests.remove();
             }
             return el;
-        })
+        });
+    /** @type {string[]} */
+    let idl = blocks
         .map(el => trimIdlSpaces(el.textContent))
-        .join('\n\n');
-
-    return idl;
+    return { blocks, idl };
 }

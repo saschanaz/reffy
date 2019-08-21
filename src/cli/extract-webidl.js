@@ -22,7 +22,7 @@ const processSpecification = require('../lib/util').processSpecification;
  * @function
  * @private
  * @param {String} url The URL of the specification
- * @return {Promise} The promise to get a dump of the IDL definitions, or
+ * @return The promise to get a dump of the IDL definitions, or
  *   an empty string if the spec does not contain any IDL.
  */
 async function extract(url) {
