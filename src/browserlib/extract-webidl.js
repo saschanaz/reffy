@@ -94,16 +94,20 @@ function extractRespecIdl() {
     const idlEl = document.querySelector('#idl-index pre') ||
         document.querySelector('.chapter-idl pre'); // SVG 2 draft
 
-    let blocks = [
+    let queries = [
         'pre.idl:not(.exclude):not(.extract):not(#actual-idl-index)',
         'pre:not(.exclude):not(.extract) > code.idl-code:not(.exclude):not(.extract)',
         'pre:not(.exclude):not(.extract) > code.idl:not(.exclude):not(.extract)',
         'div.idl-code:not(.exclude):not(.extract) > pre:not(.exclude):not(.extract)',
         'pre.widl:not(.exclude):not(.extract)'
-    ]
+    ];
+    queries = queries.concat(queries.map(q => q.replace(/pre/g, "xmp")));
+
+    const blocks = queries
         .map(sel => [...document.querySelectorAll(sel)])
         .reduce((res, elements) => res.concat(elements), [])
         .filter(el => el !== idlEl)
+        .filter(el => !el.previousElementSibling || el.previousElementSibling.id !== 'idl-index')
         .filter((el, idx, self) => self.indexOf(el) === idx)
         .filter(el => !el.closest(nonNormativeSelector))
         // .map(el => el.cloneNode(true)) we need it to be inside the tree
