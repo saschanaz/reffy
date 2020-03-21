@@ -67,45 +67,11 @@
    *   an empty string if the spec does not contain any IDL.
    */
   function extractWebIdl () {
-      const generator = getGenerator();
-      if (generator === 'bikeshed') {
-          return extractBikeshedIdl();
-      }
-      else if (document.title.startsWith('Web IDL')) {
-          // IDL content in the Web IDL spec are... examples,
-          // not real definitions
-          return '';
-      }
-      else {
-          // Most non-ReSpec specs still follow the ReSpec conventions
-          // for IDL definitions
-          return extractRespecIdl();
-      }
-  }
-
-
-  /**
-   * Extract IDL definitions from a Bikeshed spec
-   *
-   * Note Bikeshed summarizes IDL definitions in an appendix. This is
-   * what the code uses.
-   */
-  function extractBikeshedIdl() {
-      const idlHeading = document.getElementById('idl-index');
-      if (idlHeading) {
-          const nextEl = idlHeading.nextElementSibling;
-          if (nextEl) {
-              return nextEl.textContent;
-          }
-          else {
-              throw new Error('Could not find IDL in IDL index');
-          }
-      }
-      else {
-          // the document may have been generated with "omit idl-index"
-          // in which case, we try the simple way
-          return extractRespecIdl();
-      }
+      return {
+          url,
+          doc: document,
+          ...extractRespecIdl()
+      };
   }
 
 
@@ -161,19 +127,23 @@
       const idlEl = document.querySelector('#idl-index pre') ||
           document.querySelector('.chapter-idl pre'); // SVG 2 draft
 
-      let idl = [
+      let queries = [
           'pre.idl:not(.exclude):not(.extract):not(#actual-idl-index)',
           'pre:not(.exclude):not(.extract) > code.idl-code:not(.exclude):not(.extract)',
           'pre:not(.exclude):not(.extract) > code.idl:not(.exclude):not(.extract)',
           'div.idl-code:not(.exclude):not(.extract) > pre:not(.exclude):not(.extract)',
           'pre.widl:not(.exclude):not(.extract)'
-      ]
+      ];
+      queries = queries.concat(queries.map(q => q.replace(/pre/g, "xmp")));
+
+      const blocks = queries
           .map(sel => [...document.querySelectorAll(sel)])
           .reduce((res, elements) => res.concat(elements), [])
           .filter(el => el !== idlEl)
+          .filter(el => !el.previousElementSibling || el.previousElementSibling.id !== 'idl-index')
           .filter((el, idx, self) => self.indexOf(el) === idx)
           .filter(el => !el.closest(nonNormativeSelector))
-          .map(el => el.cloneNode(true))
+          // .map(el => el.cloneNode(true)) we need it to be inside the tree
           .map(el => {
               const header = el.querySelector('.idlHeader');
               if (header) {
@@ -184,11 +154,11 @@
                   tests.remove();
               }
               return el;
-          })
-          .map(el => trimIdlSpaces(el.textContent))
-          .join('\n\n');
-
-      return idl;
+          });
+      /** @type {string[]} */
+      let idl = blocks
+          .map(el => trimIdlSpaces(el.textContent));
+      return { blocks, idl };
   }
 
   /**
