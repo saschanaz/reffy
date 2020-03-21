@@ -12,7 +12,7 @@
 function extractWebidl (doc) {
     return {
         doc,
-        ...extractRespecIdl()
+        ...extractRespecIdl(doc)
     };
 }
 
@@ -24,7 +24,7 @@ function extractWebidl (doc) {
  * The function tries all known patterns used to define IDL content, making
  * sure that it only extracts elements once.
  */
-function extractRespecIdl() {
+function extractRespecIdl(document) {
     // IDL filter voluntarily similar to that defined in Respec to exclude
     // IDL defined with an `exclude` class:
     // https://github.com/w3c/respec/blob/develop/src/core/webidl-index.js#L34
