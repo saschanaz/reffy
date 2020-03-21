@@ -8,6 +8,14 @@ export default [
     }
   },
   {
+    input: 'src/browserlib/extract-webidl.js',
+    output: {
+      file: 'builds/extract-webidl.js',
+      format: 'cjs',
+      banner: '/* File generated with rollup.js, do not edit directly! See source code in src/browserlib */'
+    }
+  },
+  {
     input: 'src/browserlib/canonicalize-url.js',
     output: {
       file: 'builds/canonicalize-url.js',

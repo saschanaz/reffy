@@ -1,4 +1,5 @@
-import getGenerator from './get-generator.js';
+/* File generated with rollup.js, do not edit directly! See source code in src/browserlib */
+'use strict';
 
 /**
  * Extract the list of WebIDL definitions in the current spec
@@ -8,37 +9,11 @@ import getGenerator from './get-generator.js';
  * @return {Promise} The promise to get a dump of the IDL definitions, or
  *   an empty string if the spec does not contain any IDL.
  */
-export default function (doc) {
+function extractWebidl (doc) {
     return {
         doc,
-        ...extractRespecIdl(doc)
+        ...extractRespecIdl()
     };
-}
-
-
-
-/**
- * Extract IDL definitions from a Bikeshed spec
- *
- * Note Bikeshed summarizes IDL definitions in an appendix. This is
- * what the code uses.
- */
-function extractBikeshedIdl() {
-    const idlHeading = document.getElementById('idl-index');
-    if (idlHeading) {
-        const nextEl = idlHeading.nextElementSibling;
-        if (nextEl) {
-            return nextEl.textContent;
-        }
-        else {
-            throw new Error('Could not find IDL in IDL index');
-        }
-    }
-    else {
-        // the document may have been generated with "omit idl-index"
-        // in which case, we try the simple way
-        return extractRespecIdl();
-    }
 }
 
 
@@ -52,12 +27,10 @@ function extractBikeshedIdl() {
 function extractRespecIdl() {
     // IDL filter voluntarily similar to that defined in Respec to exclude
     // IDL defined with an `exclude` class:
-    // https://github.com/w3c/respec/blob/develop/src/core/utils.js#L69
-    // https://tabatkins.github.io/bikeshed/#metadata-informative-classes
-    const nonNormativeSelector = [
-        '.informative', '.note', '.issue', '.example', '.ednote', '.practice',
-        '.introductory', '.non-normative'
-    ].join(',');
+    // https://github.com/w3c/respec/blob/develop/src/core/webidl-index.js#L34
+    // https://github.com/w3c/respec/blob/develop/src/core/utils.js#L100
+    const nonNormativeSelector =
+        '.informative, .note, .issue, .example, .ednote, .practice';
 
     // Helper function that trims individual lines in an IDL block,
     // removing as much space as possible from the beginning of the page
@@ -90,9 +63,17 @@ function extractRespecIdl() {
             .join('\n');
     };
 
-    // Detect the IDL index appendix if there's one (to exclude it)
     const idlEl = document.querySelector('#idl-index pre') ||
-        document.querySelector('.chapter-idl pre'); // SVG 2 draft
+        document.querySelector('#chapter-idl pre');  // Used in SVG 2 draft
+
+    // TEMP (2019-07-25): Don't use the IDL index as long as we cannot run
+    // the latest version of ReSpec, because the pinned version fails to
+    // parse recent IDL constructs, see:
+    // https://github.com/tidoust/reffy/issues/134
+    // https://github.com/tidoust/reffy-reports/issues/34
+    /*if (idlEl && false) {
+        return idlEl.textContent;
+    }*/
 
     let queries = [
         'pre.idl:not(.exclude):not(.extract):not(#actual-idl-index)',
@@ -124,6 +105,8 @@ function extractRespecIdl() {
         });
     /** @type {string[]} */
     let idl = blocks
-        .map(el => trimIdlSpaces(el.textContent))
+        .map(el => trimIdlSpaces(el.textContent));
     return { blocks, idl };
 }
+
+module.exports = extractWebidl;

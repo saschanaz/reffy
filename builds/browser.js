@@ -66,10 +66,9 @@
    * @return {Promise} The promise to get a dump of the IDL definitions, or
    *   an empty string if the spec does not contain any IDL.
    */
-  function extractWebIdl () {
+  function extractWebIdl (doc) {
       return {
-          url,
-          doc: document,
+          doc,
           ...extractRespecIdl()
       };
   }
